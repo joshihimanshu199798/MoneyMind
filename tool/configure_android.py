@@ -38,18 +38,22 @@ if (keystorePropertiesFile.exists()) {
     }
     buildTypes {""", 1)
 
-    # Flutter's generated template can explicitly assign the debug key to release.
-    # Replace that assignment so it cannot override the registered release key.
-    g = re.sub(
-        r'(?s)(getByName\("release"\)\s*\{.*?signingConfig\s*=\s*)signingConfigs\.getByName\("debug"\)',
+    # Flutter's generated template uses a release { ... } block; replace its debug key.
+    release_pattern = r'(?s)(release\s*\{.*?signingConfig\s*=\s*)signingConfigs\.getByName\("debug"\)'
+    g, changed = re.subn(
+        release_pattern,
         r'\1signingConfigs.getByName("moneymindRelease")',
         g,
         count=1,
     )
-    # If the template did not have a signing assignment, add one in the release block.
-    release = re.search(r'(?s)getByName\("release"\)\s*\{(.*?)\n\s*\}', g)
-    if release and "signingConfig" not in release.group(1):
-        g = g[:release.start(1)] + release.group(1) + '\n            signingConfig = signingConfigs.getByName("moneymindRelease")' + g[release.end(1):]
+    if not changed:
+        # If no signingConfig exists, insert one inside the release block.
+        release = re.search(r'(?s)(release\s*\{)(.*?)(\n\s*\})', g)
+        if release:
+            body = release.group(2)
+            if "signingConfig" not in body:
+                body += '\n            signingConfig = signingConfigs.getByName("moneymindRelease")'
+                g = g[:release.start(2)] + body + g[release.end(2):]
     if 'signingConfig = signingConfigs.getByName("moneymindRelease")' not in g:
         raise SystemExit("Release signing configuration was not applied.")
 gradle.write_text(g, encoding="utf-8")
