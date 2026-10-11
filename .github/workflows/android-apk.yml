@@ -45,7 +45,6 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build apk --release
-      # Verify the artifact is signed by the certificate registered for MoneyMind.
       - name: Verify release APK certificate
         shell: bash
         run: |
@@ -57,7 +56,7 @@ jobs:
             exit 1
           fi
           "$APKSIGNER" verify --verbose --print-certs "$APK"
-          CERT_SHA="$( "$APKSIGNER" verify --print-certs "$APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2; exit}' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]' )"
+          CERT_SHA="$( "$APKSIGNER" verify --print-certs "$APK" | awk '/certificate SHA-256 digest:/ {print $NF; exit}' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]' )"
           EXPECTED_SHA="FB6EB92AC64C61E79B5C4BC7C78023ED332392A04A4B713E4FEDB3629EB8761B"
           if [ -z "$CERT_SHA" ]; then
             echo "::error::Could not read the APK signing certificate SHA-256."
