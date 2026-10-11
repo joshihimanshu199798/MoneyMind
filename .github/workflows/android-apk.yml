@@ -16,6 +16,9 @@ jobs:
           channel: stable
           cache: true
       - run: flutter create --platforms=android --project-name moneymind .
+      # flutter create adds a sample test for MyApp; this app's widget is MoneyMind.
+      # Keep the project-specific parser tests and remove the unrelated generated sample.
+      - run: rm -f test/widget_test.dart
       - run: python3 tool/configure_android.py
       - run: flutter pub get
       - run: flutter analyze
