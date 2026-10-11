@@ -37,13 +37,21 @@ if (keystorePropertiesFile.exists()) {
         }
     }
     buildTypes {""", 1)
-    # Apply release signing without affecting debug builds.
+
+    # Flutter's generated template can explicitly assign the debug key to release.
+    # Replace that assignment so it cannot override the registered release key.
     g = re.sub(
-        r'(?m)(getByName\("release"\)\s*\{)',
-        r'\1\n            signingConfig = signingConfigs.getByName("moneymindRelease")',
+        r'(?s)(getByName\("release"\)\s*\{.*?signingConfig\s*=\s*)signingConfigs\.getByName\("debug"\)',
+        r'\1signingConfigs.getByName("moneymindRelease")',
         g,
         count=1,
     )
+    # If the template did not have a signing assignment, add one in the release block.
+    release = re.search(r'(?s)getByName\("release"\)\s*\{(.*?)\n\s*\}', g)
+    if release and "signingConfig" not in release.group(1):
+        g = g[:release.start(1)] + release.group(1) + '\n            signingConfig = signingConfigs.getByName("moneymindRelease")' + g[release.end(1):]
+    if 'signingConfig = signingConfigs.getByName("moneymindRelease")' not in g:
+        raise SystemExit("Release signing configuration was not applied.")
 gradle.write_text(g, encoding="utf-8")
 
 # Ensure the notification-listener service is registered once.
