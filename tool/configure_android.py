@@ -79,6 +79,6 @@ kotlin.mkdir(parents=True, exist_ok=True)
 for name in ("MainActivity.kt", "NotificationCaptureService.kt"):
     source = Path("android_template") / name
     content = source.read_text(encoding="utf-8")
-    content = content.replace("package com.example.moneymind", f"package {PACKAGE}")
+    content = content.replace("package com.example.moneymind", "package `in`.moneymind.expenses")
     content = content.replace("com.example.moneymind.PAYMENT_MESSAGE", f"{PACKAGE}.PAYMENT_MESSAGE")
     (kotlin / name).write_text(content, encoding="utf-8")
