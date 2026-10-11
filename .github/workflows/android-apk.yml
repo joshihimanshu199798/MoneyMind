@@ -23,21 +23,24 @@ jobs:
       # Use the permanent release key when the repository secrets have been configured.
       # Until then, CI still builds a test APK, but it will not match the registered key.
       - name: Configure release signing key
-        if: ${{ secrets.KEYSTORE_BASE64 != '' && secrets.KEYSTORE_PASSWORD != '' && secrets.KEY_PASSWORD != '' && secrets.KEY_ALIAS != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/moneymind-release.jks
-          cat > android/key.properties <<EOF
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/moneymind-release.jks
+            cat > android/key.properties <<EOF
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=app/moneymind-release.jks
           EOF
-          python3 tool/configure_android.py
+            python3 tool/configure_android.py
+          else
+            echo "Signing secrets are not set; building a temporary test APK."
+          fi
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
