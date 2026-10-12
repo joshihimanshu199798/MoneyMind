@@ -38,7 +38,7 @@ jobs:
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=app/moneymind-release.jks
+          storeFile=moneymind-release.jks
           EOF
           python3 tool/configure_android.py
       - run: flutter pub get
