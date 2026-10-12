@@ -58,21 +58,6 @@ if (keystorePropertiesFile.exists()) {
         raise SystemExit("Release signing configuration was not applied.")
 gradle.write_text(g, encoding="utf-8")
 
-# Ensure the notification-listener service is registered once.
-m = manifest.read_text(encoding="utf-8")
-if "NotificationCaptureService" not in m:
-    m = m.replace("</application>", """<service
-            android:name=".NotificationCaptureService"
-            android:label="MoneyMind payment notification access"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-    </application>""")
-manifest.write_text(m, encoding="utf-8")
-
 # Replace Flutter's generated default activity with the app's native bridge in the correct package.
 kotlin_root = main / "kotlin"
 old_default = kotlin_root / "com" / "example" / "moneymind"
@@ -88,7 +73,7 @@ if old_default.exists():
             pass
 kotlin = kotlin_root / PACKAGE_PATH
 kotlin.mkdir(parents=True, exist_ok=True)
-for name in ("MainActivity.kt", "NotificationCaptureService.kt"):
+for name in ("MainActivity.kt",):
     source = Path("android_template") / name
     content = source.read_text(encoding="utf-8")
     content = content.replace("package com.example.moneymind", "package `in`.moneymind.expenses")
