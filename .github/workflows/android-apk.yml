@@ -43,7 +43,14 @@ jobs:
           python3 tool/configure_android.py
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - name: Run tests when test files exist
+        shell: bash
+        run: |
+          if find test -type f -name '*_test.dart' -print -quit 2>/dev/null | grep -q .; then
+            flutter test
+          else
+            echo "No test files are present; analyzer and release build will still run."
+          fi
       - run: flutter build apk --release
       - name: Verify release APK certificate
         shell: bash
